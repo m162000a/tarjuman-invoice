@@ -1,0 +1,556 @@
+import { useState } from “react”;
+
+const serviceTypes = [“طباعة”, “ترجمة”, “تصوير”, “بحث أكاديمي”, “خدمات إنترنت”, “أخرى”];
+
+export default function TarjumanInvoice() {
+const [step, setStep] = useState(0);
+const [submitted, setSubmitted] = useState(false);
+const [form, setForm] = useState({
+serviceType: “”,
+description: “”,
+price: “”,
+paymentMethod: “”,
+notes: “”,
+});
+const [errors, setErrors] = useState({});
+
+const fields = [
+{
+key: “serviceType”,
+label: “نوع الخدمة”,
+type: “select”,
+required: true,
+options: serviceTypes,
+icon: “🗂️”,
+hint: “اختر نوع العملية”,
+},
+{
+key: “description”,
+label: “البيان”,
+type: “text”,
+required: false,
+icon: “📝”,
+hint: “وصف مختصر للخدمة المقدمة”,
+},
+{
+key: “price”,
+label: “السعر”,
+type: “number”,
+required: true,
+icon: “💰”,
+hint: “أدخل المبلغ بالريال السعودي”,
+},
+{
+key: “paymentMethod”,
+label: “طريقة الدفع”,
+type: “radio”,
+required: false,
+icon: “💳”,
+options: [“نقدي”, “شبكة”],
+},
+{
+key: “notes”,
+label: “ملاحظات”,
+type: “textarea”,
+required: false,
+icon: “💬”,
+hint: “أي ملاحظات إضافية”,
+},
+];
+
+const current = fields[step];
+const isLast = step === fields.length - 1;
+
+const validate = () => {
+if (current.required && !form[current.key]) {
+setErrors({ [current.key]: “هذا الحقل مطلوب” });
+return false;
+}
+setErrors({});
+return true;
+};
+
+const handleNext = () => {
+if (!validate()) return;
+if (isLast) {
+setSubmitted(true);
+} else {
+setStep((s) => s + 1);
+}
+};
+
+const handleBack = () => {
+setErrors({});
+setStep((s) => s - 1);
+};
+
+const handleKeyDown = (e) => {
+if (e.key === “Enter” && current.type !== “textarea”) handleNext();
+};
+
+const progress = ((step + 1) / fields.length) * 100;
+
+if (submitted) {
+return (
+<div style={styles.page}>
+<div style={styles.card}>
+<div style={styles.successIcon}>✓</div>
+<h2 style={styles.successTitle}>تم إصدار الفاتورة</h2>
+<p style={styles.successSub}>شكراً — سيتم إرسال نسخة على الإيميل</p>
+
+```
+      <div style={styles.receiptBox}>
+        <div style={styles.receiptHeader}>
+          <span style={styles.receiptLogo}>الترجمان</span>
+          <span style={styles.receiptDate}>{new Date().toLocaleDateString("ar-SA")}</span>
+        </div>
+        <div style={styles.receiptDivider} />
+        {fields.map((f) =>
+          form[f.key] ? (
+            <div key={f.key} style={styles.receiptRow}>
+              <span style={styles.receiptKey}>{f.label}</span>
+              <span style={styles.receiptVal}>{form[f.key]}{f.key === "price" ? " ريال" : ""}</span>
+            </div>
+          ) : null
+        )}
+      </div>
+
+      <button style={styles.resetBtn} onClick={() => { setStep(0); setSubmitted(false); setForm({ serviceType: "", description: "", price: "", paymentMethod: "", notes: "" }); }}>
+        فاتورة جديدة
+      </button>
+    </div>
+  </div>
+);
+```
+
+}
+
+return (
+<div style={styles.page}>
+<div style={styles.card}>
+{/* Header */}
+<div style={styles.header}>
+<div style={styles.logo}>الترجمان</div>
+<div style={styles.logoSub}>مكتب الترجمة المعتمدة</div>
+</div>
+
+```
+    {/* Progress */}
+    <div style={styles.progressTrack}>
+      <div style={{ ...styles.progressFill, width: `${progress}%` }} />
+    </div>
+    <p style={styles.stepCount}>{step + 1} / {fields.length}</p>
+
+    {/* Field */}
+    <div style={styles.fieldWrap} key={step}>
+      <div style={styles.fieldIcon}>{current.icon}</div>
+      <label style={styles.fieldLabel}>
+        {current.label}
+        {current.required && <span style={styles.required}> *</span>}
+      </label>
+
+      {current.type === "select" && (
+        <div style={styles.optionGrid}>
+          {current.options.map((opt) => (
+            <button
+              key={opt}
+              style={{
+                ...styles.optionBtn,
+                ...(form[current.key] === opt ? styles.optionBtnActive : {}),
+              }}
+              onClick={() => setForm({ ...form, [current.key]: opt })}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {current.type === "radio" && (
+        <div style={styles.radioGroup}>
+          {current.options.map((opt) => (
+            <button
+              key={opt}
+              style={{
+                ...styles.radioBtn,
+                ...(form[current.key] === opt ? styles.radioBtnActive : {}),
+              }}
+              onClick={() => setForm({ ...form, [current.key]: opt })}
+            >
+              <span style={styles.radioCircle}>
+                {form[current.key] === opt && <span style={styles.radioDot} />}
+              </span>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {current.type === "text" && (
+        <input
+          style={{ ...styles.input, ...(errors[current.key] ? styles.inputError : {}) }}
+          placeholder={current.hint}
+          value={form[current.key]}
+          onChange={(e) => setForm({ ...form, [current.key]: e.target.value })}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          dir="rtl"
+        />
+      )}
+
+      {current.type === "number" && (
+        <div style={styles.priceWrap}>
+          <input
+            style={{ ...styles.input, ...styles.priceInput, ...(errors[current.key] ? styles.inputError : {}) }}
+            placeholder="0.00"
+            type="number"
+            value={form[current.key]}
+            onChange={(e) => setForm({ ...form, [current.key]: e.target.value })}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            dir="ltr"
+          />
+          <span style={styles.currency}>ريال</span>
+        </div>
+      )}
+
+      {current.type === "textarea" && (
+        <textarea
+          style={styles.textarea}
+          placeholder={current.hint}
+          value={form[current.key]}
+          onChange={(e) => setForm({ ...form, [current.key]: e.target.value })}
+          autoFocus
+          dir="rtl"
+          rows={3}
+        />
+      )}
+
+      {errors[current.key] && <p style={styles.errorMsg}>{errors[current.key]}</p>}
+    </div>
+
+    {/* Navigation */}
+    <div style={styles.navRow}>
+      {step > 0 && (
+        <button style={styles.backBtn} onClick={handleBack}>← رجوع</button>
+      )}
+      <button
+        style={{ ...styles.nextBtn, ...(step === 0 ? styles.nextBtnFull : {}) }}
+        onClick={handleNext}
+      >
+        {isLast ? "إصدار الفاتورة ✓" : "التالي →"}
+      </button>
+    </div>
+
+    <p style={styles.pressEnter}>أو اضغط Enter للمتابعة</p>
+  </div>
+</div>
+```
+
+);
+}
+
+const styles = {
+page: {
+minHeight: “100vh”,
+background: “linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)”,
+display: “flex”,
+alignItems: “center”,
+justifyContent: “center”,
+fontFamily: “‘Segoe UI’, Tahoma, Geneva, Verdana, sans-serif”,
+padding: “20px”,
+direction: “rtl”,
+},
+card: {
+background: “rgba(255,255,255,0.04)”,
+backdropFilter: “blur(20px)”,
+border: “1px solid rgba(255,255,255,0.1)”,
+borderRadius: “24px”,
+padding: “40px 36px”,
+width: “100%”,
+maxWidth: “480px”,
+boxShadow: “0 25px 60px rgba(0,0,0,0.5)”,
+},
+header: {
+textAlign: “center”,
+marginBottom: “28px”,
+},
+logo: {
+fontSize: “28px”,
+fontWeight: “700”,
+color: “#f8c65a”,
+letterSpacing: “2px”,
+fontFamily: “‘Georgia’, serif”,
+},
+logoSub: {
+fontSize: “12px”,
+color: “rgba(255,255,255,0.4)”,
+marginTop: “4px”,
+letterSpacing: “1px”,
+},
+progressTrack: {
+height: “3px”,
+background: “rgba(255,255,255,0.1)”,
+borderRadius: “99px”,
+overflow: “hidden”,
+marginBottom: “8px”,
+},
+progressFill: {
+height: “100%”,
+background: “linear-gradient(90deg, #f8c65a, #fbbf24)”,
+borderRadius: “99px”,
+transition: “width 0.4s cubic-bezier(0.4,0,0.2,1)”,
+},
+stepCount: {
+color: “rgba(255,255,255,0.3)”,
+fontSize: “12px”,
+textAlign: “left”,
+margin: “0 0 32px”,
+},
+fieldWrap: {
+marginBottom: “32px”,
+animation: “fadeIn 0.3s ease”,
+},
+fieldIcon: {
+fontSize: “28px”,
+marginBottom: “12px”,
+},
+fieldLabel: {
+display: “block”,
+fontSize: “20px”,
+fontWeight: “600”,
+color: “#fff”,
+marginBottom: “16px”,
+},
+required: {
+color: “#f8c65a”,
+},
+optionGrid: {
+display: “grid”,
+gridTemplateColumns: “1fr 1fr”,
+gap: “10px”,
+},
+optionBtn: {
+padding: “14px 12px”,
+background: “rgba(255,255,255,0.05)”,
+border: “1px solid rgba(255,255,255,0.1)”,
+borderRadius: “12px”,
+color: “rgba(255,255,255,0.7)”,
+fontSize: “15px”,
+cursor: “pointer”,
+transition: “all 0.2s”,
+textAlign: “center”,
+},
+optionBtnActive: {
+background: “rgba(248,198,90,0.15)”,
+border: “1px solid #f8c65a”,
+color: “#f8c65a”,
+},
+radioGroup: {
+display: “flex”,
+flexDirection: “column”,
+gap: “10px”,
+},
+radioBtn: {
+display: “flex”,
+alignItems: “center”,
+gap: “12px”,
+padding: “16px 20px”,
+background: “rgba(255,255,255,0.05)”,
+border: “1px solid rgba(255,255,255,0.1)”,
+borderRadius: “12px”,
+color: “rgba(255,255,255,0.7)”,
+fontSize: “16px”,
+cursor: “pointer”,
+transition: “all 0.2s”,
+textAlign: “right”,
+},
+radioBtnActive: {
+background: “rgba(248,198,90,0.12)”,
+border: “1px solid #f8c65a”,
+color: “#f8c65a”,
+},
+radioCircle: {
+width: “20px”,
+height: “20px”,
+borderRadius: “50%”,
+border: “2px solid currentColor”,
+display: “flex”,
+alignItems: “center”,
+justifyContent: “center”,
+flexShrink: 0,
+},
+radioDot: {
+width: “8px”,
+height: “8px”,
+borderRadius: “50%”,
+background: “#f8c65a”,
+},
+input: {
+width: “100%”,
+padding: “16px 20px”,
+background: “rgba(255,255,255,0.06)”,
+border: “1px solid rgba(255,255,255,0.15)”,
+borderRadius: “12px”,
+color: “#fff”,
+fontSize: “17px”,
+outline: “none”,
+boxSizing: “border-box”,
+transition: “border 0.2s”,
+},
+inputError: {
+border: “1px solid #f87171”,
+},
+priceWrap: {
+position: “relative”,
+display: “flex”,
+alignItems: “center”,
+},
+priceInput: {
+paddingLeft: “60px”,
+textAlign: “left”,
+fontSize: “24px”,
+fontWeight: “600”,
+flex: 1,
+},
+currency: {
+position: “absolute”,
+left: “18px”,
+color: “rgba(255,255,255,0.4)”,
+fontSize: “14px”,
+pointerEvents: “none”,
+},
+textarea: {
+width: “100%”,
+padding: “16px 20px”,
+background: “rgba(255,255,255,0.06)”,
+border: “1px solid rgba(255,255,255,0.15)”,
+borderRadius: “12px”,
+color: “#fff”,
+fontSize: “16px”,
+outline: “none”,
+resize: “none”,
+boxSizing: “border-box”,
+fontFamily: “inherit”,
+},
+errorMsg: {
+color: “#f87171”,
+fontSize: “13px”,
+marginTop: “8px”,
+},
+navRow: {
+display: “flex”,
+gap: “12px”,
+marginBottom: “12px”,
+},
+backBtn: {
+padding: “14px 20px”,
+background: “transparent”,
+border: “1px solid rgba(255,255,255,0.15)”,
+borderRadius: “12px”,
+color: “rgba(255,255,255,0.5)”,
+fontSize: “15px”,
+cursor: “pointer”,
+whiteSpace: “nowrap”,
+},
+nextBtn: {
+flex: 1,
+padding: “16px 24px”,
+background: “linear-gradient(135deg, #f8c65a, #f59e0b)”,
+border: “none”,
+borderRadius: “12px”,
+color: “#0f172a”,
+fontSize: “16px”,
+fontWeight: “700”,
+cursor: “pointer”,
+transition: “opacity 0.2s”,
+},
+nextBtnFull: {
+flex: 1,
+},
+pressEnter: {
+textAlign: “center”,
+color: “rgba(255,255,255,0.2)”,
+fontSize: “12px”,
+margin: 0,
+},
+// Success screen
+successIcon: {
+width: “64px”,
+height: “64px”,
+borderRadius: “50%”,
+background: “linear-gradient(135deg, #22c55e, #16a34a)”,
+display: “flex”,
+alignItems: “center”,
+justifyContent: “center”,
+fontSize: “28px”,
+color: “#fff”,
+margin: “0 auto 20px”,
+},
+successTitle: {
+color: “#fff”,
+fontSize: “24px”,
+fontWeight: “700”,
+textAlign: “center”,
+margin: “0 0 8px”,
+},
+successSub: {
+color: “rgba(255,255,255,0.4)”,
+textAlign: “center”,
+fontSize: “14px”,
+marginBottom: “28px”,
+},
+receiptBox: {
+background: “rgba(255,255,255,0.05)”,
+border: “1px solid rgba(255,255,255,0.1)”,
+borderRadius: “16px”,
+padding: “20px”,
+marginBottom: “24px”,
+},
+receiptHeader: {
+display: “flex”,
+justifyContent: “space-between”,
+alignItems: “center”,
+marginBottom: “12px”,
+},
+receiptLogo: {
+color: “#f8c65a”,
+fontWeight: “700”,
+fontSize: “16px”,
+},
+receiptDate: {
+color: “rgba(255,255,255,0.4)”,
+fontSize: “13px”,
+},
+receiptDivider: {
+height: “1px”,
+background: “rgba(255,255,255,0.1)”,
+marginBottom: “12px”,
+},
+receiptRow: {
+display: “flex”,
+justifyContent: “space-between”,
+padding: “6px 0”,
+borderBottom: “1px dashed rgba(255,255,255,0.05)”,
+},
+receiptKey: {
+color: “rgba(255,255,255,0.4)”,
+fontSize: “14px”,
+},
+receiptVal: {
+color: “#fff”,
+fontSize: “14px”,
+fontWeight: “500”,
+},
+resetBtn: {
+width: “100%”,
+padding: “16px”,
+background: “rgba(248,198,90,0.1)”,
+border: “1px solid rgba(248,198,90,0.3)”,
+borderRadius: “12px”,
+color: “#f8c65a”,
+fontSize: “16px”,
+fontWeight: “600”,
+cursor: “pointer”,
+},
+};
